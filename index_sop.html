@@ -1,0 +1,516 @@
+==================index_sop.html==========================
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>SOP Chatbot</title>
+<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css') }}">
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+ 
+  <style>
+
+    body, html {
+
+      height: 100%;
+
+      margin: 0;
+
+      padding: 0;
+
+      font-family: 'Roboto', sans-serif;
+
+      background: url("/static/bg.jpg") no-repeat center center fixed;
+
+      background-size: cover;
+
+      display: flex;
+
+      flex-direction: column;
+
+      align-items: center;
+
+      justify-content: flex-start;
+
+      padding-top: 2rem;
+
+      color: white; /* default text color white */
+
+    }
+ 
+    /* Heading in white outside the white box */
+
+    h1 {
+
+      margin-bottom: 1rem;
+
+      font-weight: 500;
+
+      font-size: 28px;
+
+      color: white; /* force white */
+
+    }
+ 
+    /* The white box containing only chat messages */
+
+    #chat-box {
+
+      width: 1200px;
+
+      max-width: 95%;
+
+      height: 600px;
+
+      background: rgba(255, 255, 255, 0.9);
+
+      border-radius: 8px;
+
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+
+      padding: 15px 20px;
+
+      overflow-y: auto;
+
+      border: 1px solid #ccc;
+
+      box-sizing: border-box;
+
+      color: #003366;
+
+      font-size: 14px;
+
+      line-height: 1.5;
+
+      margin-bottom: 1rem; /* space below chat box */
+
+    }
+ 
+    #bot-typing {
+
+      font-size: 14px;
+
+      font-style: italic;
+
+      font-weight: bold;
+
+      color: #888;
+
+      margin-top: 0.5rem;
+
+      text-align: center;
+
+      height: 20px;
+
+      visibility: hidden;
+
+    }
+ 
+    /* Input area below chat box */
+
+    #input-area {
+
+      width: 900px;
+
+      max-width: 95%;
+
+      display: flex;
+
+      gap: 10px;
+
+      justify-content: center;
+
+      margin-bottom: 2rem;
+
+    }
+ 
+    #user-input {
+
+      flex: 1;
+
+      max-width: 400px;
+
+      padding: 12px 16px;
+
+      font-size: 16px;
+
+      border-radius: 20px;
+
+      border: 1px solid #ccc;
+
+    }
+ 
+    button {
+
+      padding: 12px 24px;
+
+      font-size: 16px;
+
+      border-radius: 20px;
+
+      border: none;
+
+      background-color: #0056b3;
+
+      color: white;
+
+      cursor: pointer;
+
+      transition: background-color 0.3s ease;
+
+    }
+ 
+    button:hover:enabled {
+
+      background-color: #004494;
+
+    }
+ 
+    button:disabled {
+
+      background-color: #99b8d1;
+
+      cursor: not-allowed;
+
+    }
+ 
+    /* Chat bubbles */
+
+    .user-msg, .bot-msg {
+
+      max-width: 70%;
+
+      padding: 8px 12px;
+
+      margin: 8px 0;
+
+      border-radius: 20px;
+
+      word-wrap: break-word;
+
+      white-space: pre-wrap;
+
+      clear: both;
+
+    }
+ 
+    .user-msg {
+
+      background-color: #d1f7d6;
+
+      float: right;
+
+      color: #004d00;
+
+      text-align: right;
+
+    }
+ 
+    .bot-msg {
+
+      background-color: #e6f0ff;
+
+      float: left;
+
+      color: #003366;
+
+    }
+
+	.bot-msg {
+
+	  opacity: 0;
+
+	  transform: translateY(10px);
+
+	  animation: fadeInUp 0.5s ease forwards;
+
+	}
+ 
+@keyframes fadeInUp {
+
+	  to {
+
+		opacity: 1;
+
+		transform: translateY(0);
+
+	  }
+
+	}
+ 
+  </style>
+</head>
+<body>
+ 
+  <h1>SOP Chatbot</h1>
+ 
+  <div id="chat-box"></div>
+<div id="bot-typing">Bot is typing...</div>
+ 
+  <div id="input-area">
+<input id="user-input" type="text" placeholder="Ask about the system..." autocomplete="off" />
+<button id="send-btn" onclick="sendMessage()">Ask</button>
+</div>
+ 
+  <script>
+
+    const chatBox = document.getElementById('chat-box');
+
+    const typingIndicator = document.getElementById('bot-typing');
+
+    const inputField = document.getElementById('user-input');
+
+    const sendBtn = document.getElementById('send-btn');
+ 
+    function delay(ms) {
+
+      return new Promise(resolve => setTimeout(resolve, ms));
+
+    }
+ 
+    async function typeText(element, text, speed = 30) {
+
+      element.innerText = '';
+
+      for (let i = 0; i < text.length; i++) {
+
+        element.innerText += text.charAt(i);
+
+        await delay(speed);
+
+      }
+
+    }
+ 
+    function appendMessage(text, sender = 'bot') {
+
+      const msgDiv = document.createElement('div');
+
+      msgDiv.classList.add(sender === 'bot' ? 'bot-msg' : 'user-msg');
+
+      msgDiv.innerText = text;
+
+      chatBox.appendChild(msgDiv);
+
+      chatBox.scrollTop = chatBox.scrollHeight;
+
+      return msgDiv;
+
+    }
+ 
+    async function sendMessage() {
+
+	  const query = inputField.value.trim();
+
+	  if (!query) return;
+ 
+	  // Append user message
+
+	  appendMessage(query, 'user');
+ 
+	  inputField.value = '';
+
+	  inputField.disabled = true;
+
+	  sendBtn.disabled = true;
+
+	  typingIndicator.style.visibility = 'visible';
+ 
+	  // Simulate bot typing delay
+
+	  await delay(1000);
+ 
+	  try {
+
+		const formData = new URLSearchParams();
+
+		formData.append('query', query);
+ 
+		const response = await fetch('/ask', {
+
+		  method: 'POST',
+
+		  headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+
+		  body: formData
+
+		});
+
+		const data = await response.json();
+ 
+		typingIndicator.style.visibility = 'hidden';
+ 
+		// Use HTML-aware append for bot message
+
+		appendBotMessageHTML(data.answer);
+ 
+	  } catch (err) {
+
+		typingIndicator.style.visibility = 'hidden';
+
+		appendMessage('Sorry, something went wrong. Please try again.', 'bot');
+
+	  }
+ 
+	  inputField.disabled = false;
+
+	  sendBtn.disabled = false;
+
+	  inputField.focus();
+
+	}
+
+	function makeFileLinksClickable(msgDiv) {
+
+  const regex = /\[Click here to view: ([\w\-. ]+\.txt)\]/gi;
+
+  let html = msgDiv.innerText;
+ 
+  let matches;
+
+  let lastIndex = 0;
+
+  let parts = [];
+ 
+  while ((matches = regex.exec(html)) !== null) {
+
+    // Push text before match
+
+    parts.push(document.createTextNode(html.substring(lastIndex, matches.index)));
+ 
+    // Create button for file
+
+    const filename = matches[1];
+
+    const btn = document.createElement('button');
+
+    btn.textContent = `View ${filename}`;
+
+    btn.style.margin = '5px';
+
+    btn.onclick = async () => {
+
+      btn.disabled = true;
+
+      btn.textContent = 'Loading...';
+
+      try {
+
+        const res = await fetch('/get_file_content', {
+
+          method: 'POST',
+
+          headers: { 'Content-Type': 'application/json' },
+
+          body: JSON.stringify({ filename })
+
+        });
+
+        const data = await res.json();
+
+        const pre = document.createElement('pre');
+
+        pre.textContent = data.content;
+
+        pre.style.background = '#f4f4f4';
+
+        pre.style.border = '1px solid #ccc';
+
+        pre.style.padding = '10px';
+
+        pre.style.whiteSpace = 'pre-wrap';
+
+        btn.parentNode.insertBefore(pre, btn.nextSibling);
+
+        btn.remove(); // remove button after showing content
+
+      } catch (e) {
+
+        btn.textContent = 'Error loading file';
+
+      }
+
+    };
+
+    parts.push(btn);
+
+    lastIndex = regex.lastIndex;
+
+  }
+
+  // Push remaining text after last match
+
+  parts.push(document.createTextNode(html.substring(lastIndex)));
+ 
+  // Clear current content and append nodes with buttons
+
+  msgDiv.innerHTML = '';
+
+  parts.forEach(p => msgDiv.appendChild(p));
+
+}
+ 
+function appendBotMessageHTML(htmlContent) {
+
+  const msgDiv = document.createElement('div');
+
+  msgDiv.classList.add('bot-msg');
+
+  msgDiv.innerHTML = htmlContent; // allow HTML formatting
+
+  chatBox.appendChild(msgDiv);
+
+  chatBox.scrollTop = chatBox.scrollHeight;
+
+  return msgDiv;
+
+}
+ 
+// Modify appendMessage to run makeFileLinksClickable on bot messages
+
+function appendMessage(text, sender = 'bot') {
+
+  const msgDiv = document.createElement('div');
+
+  msgDiv.classList.add(sender === 'bot' ? 'bot-msg' : 'user-msg');
+ 
+  // Convert **bold** markdown to HTML <strong>
+
+  let html = text
+
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+
+    .replace(/\n/g, '<br>');
+ 
+  msgDiv.innerHTML = html;
+
+  chatBox.appendChild(msgDiv);
+
+  chatBox.scrollTop = chatBox.scrollHeight;
+ 
+  if (sender === 'bot') {
+
+    makeFileLinksClickable(msgDiv);
+
+  }
+
+  return msgDiv;
+
+}
+ 
+inputField.addEventListener('keydown', (e) => {
+
+  if (e.key === 'Enter' && !sendBtn.disabled) {
+
+    e.preventDefault(); // prevent form submit or refresh
+
+    sendMessage();
+
+  }
+
+});
+</script>
+ 
+</body>
+</html>
+
+ 
