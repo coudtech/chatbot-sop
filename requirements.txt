@@ -1,0 +1,11 @@
+cloudpickle
+matplotlib
+plotly
+seaborn
+Flask
+scikit-learn
+pandas
+numpy
+tqdm
+requests
+gunicorn
