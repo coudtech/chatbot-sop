@@ -9,4 +9,5 @@ numpy
 tqdm
 requests
 gunicorn
-flask_cors
+flask
+flask-cors
